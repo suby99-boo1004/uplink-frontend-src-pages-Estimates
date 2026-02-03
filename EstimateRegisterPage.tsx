@@ -46,7 +46,14 @@ function normalizePayload(payload: any) {
       const res = await api<{ id: number; estimate_id?: number }>(`/api/estimates`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(normalizePayload(payload)),
+        body: JSON.stringify((() => {
+        const p = normalizePayload(payload) as any;
+        // title이 서버에서 무시되는 환경(필드명 차이) 대비: 보조 키도 함께 전달(서버가 extra 허용 시만 사용됨)
+        if (p && p.title != null && String(p.title).trim() !== "") {
+          p.estimate_title = p.title;
+        }
+        return p;
+      })()),
       });
       const newId = Number((res as any)?.estimate_id ?? (res as any)?.id ?? 0);
       alert("견적서가 생성되었습니다.");

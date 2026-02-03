@@ -118,7 +118,7 @@ function getProductPrice(prod: any, pt: PriceType) {
       prod?.price_supply ??
         prod?.supply_price ??
         prod?.price_delivery ??
-        prod?.delivery_price ??
+        prod?.supply_price ??
         prod?.price3 ??
         0
     );
@@ -136,6 +136,7 @@ function ProductPickModal({ open, onClose, onPick }: ProductPickModalProps) {
   const [q, setQ] = useState("");
   const [rows, setRows] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
+  const [selectedId, setSelectedId] = useState<number | null>(null);
   const debounceRef = useRef<number | null>(null);
 
   async function load(search: string) {
@@ -151,6 +152,7 @@ function ProductPickModal({ open, onClose, onPick }: ProductPickModalProps) {
   useEffect(() => {
     if (!open) return;
     setQ("");
+    setSelectedId(null);
     load("");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
@@ -167,6 +169,38 @@ function ProductPickModal({ open, onClose, onPick }: ProductPickModalProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [q, open]);
 
+  const sortedRows = useMemo(() => {
+    const norm = (s: unknown) => String(s ?? "").trim();
+
+    const groupRank = (s: string) => {
+      const t = (s || "").trim();
+      if (!t) return 3;
+      const ch = t[0];
+      if (/[0-9]/.test(ch)) return 0;      // 숫자
+      if (/[A-Za-z]/.test(ch)) return 1;   // 영어
+      if (/[가-힣]/.test(ch)) return 2;     // 한글
+      return 3;
+    };
+
+    const cmp = (a: Product, b: Product) => {
+      const an = norm((a as any).name);
+      const bn = norm((b as any).name);
+      const ar = groupRank(an);
+      const br = groupRank(bn);
+      if (ar !== br) return ar - br;
+
+      // 같은 그룹 내 정렬: 오름차순, 숫자 자연정렬 포함
+      return an.localeCompare(bn, "ko-KR", { numeric: true, sensitivity: "base" });
+    };
+
+    return [...rows].sort(cmp);
+  }, [rows]);
+
+  const selected = useMemo(
+    () => sortedRows.find((r) => Number(r.id) === Number(selectedId)) || null,
+    [sortedRows, selectedId]
+  );
+
   if (!open) return null;
 
   return (
@@ -181,10 +215,14 @@ function ProductPickModal({ open, onClose, onPick }: ProductPickModalProps) {
         padding: 16,
         zIndex: 50,
       }}
-      onClick={onClose}
+      // ✅ 주변 클릭으로 닫히지 않게 함 (닫기는 버튼으로만)
+      onMouseDown={(e) => {
+        // backdrop 클릭 시 아무 동작 안 함
+        e.preventDefault();
+      }}
     >
       <div
-        onClick={(e) => e.stopPropagation()}
+        onMouseDown={(e) => e.stopPropagation()}
         style={{
           width: 980,
           maxWidth: "100%",
@@ -230,65 +268,87 @@ function ProductPickModal({ open, onClose, onPick }: ProductPickModalProps) {
               outline: "none",
             }}
           />
-          <div style={{ fontSize: 12, color: "#94A3B8" }}>{loading ? "로딩중..." : `${rows.length}건`}</div>
+          <div style={{ fontSize: 12, color: "#94A3B8" }}>{loading ? "로딩중..." : `${sortedRows.length}건`}</div>
         </div>
 
-        <div style={{ border: "1px solid #1F2937", borderRadius: 12, overflow: "hidden" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
-            <thead>
-              <tr style={{ background: "rgba(15,23,42,0.8)", color: "#F8FAFC" }}>
-                <th style={{ padding: "10px 12px", textAlign: "left" }}>항목</th>
-                <th style={{ padding: "10px 12px", textAlign: "left" }}>구분</th>
-                <th style={{ padding: "10px 12px", textAlign: "left" }}>모델명</th>
-                <th style={{ padding: "10px 12px", textAlign: "left" }}>규격</th>
-                <th style={{ padding: "10px 12px", textAlign: "right" }}>납품가(참고)</th>
-                <th style={{ padding: "10px 12px" }} />
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((r) => (
-                <tr key={(r as any).id} style={{ borderTop: "1px solid rgba(148,163,184,0.15)" }}>
-                  <td style={{ padding: "10px 12px" }}>{(r as any).item_name || ""}</td>
-                  <td style={{ padding: "10px 12px" }}>{(r as any).category_name || ""}</td>
-                  <td style={{ padding: "10px 12px", fontWeight: 800 }}>{(r as any).name || ""}</td>
-                  <td style={{ padding: "10px 12px" }}>{(r as any).spec || ""}</td>
-                  <td style={{ padding: "10px 12px", textAlign: "right", fontWeight: 900 }}>
-                    {money(Number((r as any).price_delivery || (r as any).price_supply || 0))}
-                  </td>
-                  <td style={{ padding: "10px 12px", textAlign: "right" }}>
-                    <button
-                      type="button"
-                      onClick={() => onPick(r)}
-                      style={{
-                        fontSize: 12,
-                        padding: "8px 10px",
-                        borderRadius: 10,
-                        border: "1px solid #1D4ED8",
-                        background: "linear-gradient(180deg, #2563EB 0%, #1D4ED8 100%)",
-                        color: "#F8FAFC",
-                        fontWeight: 900,
-                        cursor: "pointer",
-                      }}
-                    >
-                      추가
-                    </button>
-                  </td>
-                </tr>
-              ))}
+        {/* 리스트 컨트롤만 표시 (오른쪽 상세 제거) */}
+        <div
+          style={{
+            border: "1px solid #1F2937",
+            borderRadius: 12,
+            overflow: "hidden",
+            background: "rgba(2,6,23,0.35)",
+          }}
+        >
+          <div style={{ maxHeight: 420, overflow: "auto" }}>
+            {sortedRows.map((p) => {
+              const isSelected = Number(selectedId) === Number(p.id);
+              return (
+                <div
+                  key={String(p.id)}
+                  onClick={() => setSelectedId(Number(p.id))}
+                  onDoubleClick={() => {
+                    onPick(p);
+                    onClose();
+                  }}
+                  style={{
+                    padding: "10px 12px",
+                    cursor: "pointer",
+                    borderBottom: "1px solid rgba(148,163,184,0.12)",
+                    background: isSelected ? "rgba(59,130,246,0.18)" : "transparent",
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
+                    <div style={{ color: "#E2E8F0", fontWeight: 800, fontSize: 13, lineHeight: 1.2 }}>
+                      {p.name || "-"}
+                    </div>
+                    <div style={{ color: "#93C5FD", fontSize: 12, whiteSpace: "nowrap" }}>
+                      {p.model_name || ""}
+                    </div>
+                  </div>
 
-              {rows.length === 0 && (
-                <tr>
-                  <td colSpan={6} style={{ padding: 14, color: "#94A3B8" }}>
-                    데이터가 없습니다.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                  <div style={{ marginTop: 4, color: "#94A3B8", fontSize: 12, lineHeight: 1.2 }}>
+                    {(p.spec || "").slice(0, 90)}
+                    {(p.spec || "").length > 90 ? "…" : ""}
+                  </div>
+
+                  <div style={{ marginTop: 6, display: "flex", justifyContent: "space-between", gap: 10, fontSize: 11 }}>
+                    <div style={{ color: "#CBD5E1" }}>{(p as any).category || (p as any).group || (p as any).kind || ""}</div>
+                    <div style={{ color: "#A7F3D0" }}>
+                      납품가(참고): {getProductPrice(p as any, "SUPPLY") ? getProductPrice(p as any, "SUPPLY").toLocaleString() : "-"}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+
+            {sortedRows.length === 0 && (
+              <div style={{ padding: 14, color: "#94A3B8", fontSize: 12 }}>데이터가 없습니다.</div>
+            )}
+          </div>
         </div>
 
-        <div style={{ marginTop: 10, fontSize: 11, color: "#93C5FD" }}>
-          ※ 제품 추가 후, 견적서에서 단가(설계가/소보수가/납품가)를 선택할 수 있습니다.
+        {/* 하단 버튼 영역 */}
+        <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 12 }}>
+          <button
+            onClick={() => {
+              if (!selected) return;
+              onPick(selected);
+              onClose();
+            }}
+            disabled={!selected}
+            style={{
+              padding: "10px 14px",
+              borderRadius: 12,
+              border: "1px solid #2563EB",
+              background: selected ? "rgba(37,99,235,0.25)" : "rgba(30,41,59,0.35)",
+              color: selected ? "#E0F2FE" : "#94A3B8",
+              fontWeight: 900,
+              cursor: selected ? "pointer" : "not-allowed",
+            }}
+          >
+            제품 추가
+          </button>
         </div>
       </div>
     </div>
@@ -379,7 +439,14 @@ export default function EstimateRegisterModal({ saving, onSubmit, mode = "create
   const [project, setProject] = useState<DraftProject | null>(null);
 
   const [title, setTitle] = useState(() => (initial?.title ? String(initial.title) : ""));
+  const [titleTouched, setTitleTouched] = useState(false);
   const [receiverName, setReceiverName] = useState(() => (initial?.receiver_name ? String(initial.receiver_name) : ""));
+
+  useEffect(() => {
+    // 모드/초기값 변경 시 사용자 입력 여부 리셋
+    setTitleTouched(false);
+  }, [mode, initial?.project_id]);
+
   const [memo, setMemo] = useState(() => (initial?.memo ? String(initial.memo) : ""));
 
   const [sections, setSections] = useState<DraftSection[]>(() => {
@@ -429,9 +496,9 @@ export default function EstimateRegisterModal({ saving, onSubmit, mode = "create
     // 프로젝트 선택 시 기본값 채움(신규 등록에서만)
     if (mode !== "create") return;
     if (!project) return;
-    if (!title.trim()) setTitle(project.name);
+    if (!titleTouched && !title.trim()) setTitle(project.name);
     if (!receiverName.trim()) setReceiverName(project.clientName || "");
-  }, [project, mode]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [project, mode, titleTouched, title, receiverName]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function loadProjects() {
     setLoadingProjects(true);
@@ -782,7 +849,10 @@ export default function EstimateRegisterModal({ saving, onSubmit, mode = "create
             <span style={{ fontSize: 12, color: "#CBD5E1", fontWeight: 800 }}>견적서 제목</span>
             <input
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(e) => {
+                setTitleTouched(true);
+                setTitle(e.target.value);
+              }}
               placeholder="미입력 시 프로젝트명으로 저장"
               style={{
                 padding: "10px 12px",

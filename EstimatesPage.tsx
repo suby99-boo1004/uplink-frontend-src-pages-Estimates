@@ -84,7 +84,7 @@ export default function EstimatesPage() {
 
             const updatedAt = r?.updated_at ?? r?.updatedAt ?? createdAt;
 
-            const title = r?.project_name ?? r?.title ?? r?.name ?? "견적서";
+            const title = r?.title ?? r?.title ?? r?.name ?? "견적서";
             const receiver = r?.receiver_name ?? r?.receiver ?? "-";
             const manager = r?.author_name ?? r?.manager ?? r?.created_by_name ?? "-";
             const totalAmount = Number(r?.total ?? r?.total_amount ?? r?.totalAmount ?? 0);

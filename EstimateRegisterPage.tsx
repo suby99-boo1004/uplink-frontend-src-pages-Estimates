@@ -12,12 +12,41 @@ export default function EstimateRegisterPage() {
   const navigate = useNavigate();
   const [saving, setSaving] = useState(false);
 
+
+
+function normalizePayload(payload: any) {
+  // 견적서 라인에서 제품 선택 모드일 때 source_type/source_id가 빠지는 경우 보정
+  const cloned = { ...payload };
+  if (Array.isArray(cloned.sections)) {
+    cloned.sections = cloned.sections.map((sec: any) => {
+      const s2 = { ...sec };
+      if (Array.isArray(s2.lines)) {
+        s2.lines = s2.lines.map((ln: any) => {
+          const l2 = { ...ln };
+          const pid = l2.product_id ?? l2.productId ?? l2.source_id ?? l2.sourceId ?? null;
+          if ((l2.source_type == null || l2.source_type === "NONE") && pid != null) {
+            l2.source_type = "PRODUCT";
+            l2.source_id = pid;
+          }
+          // 백엔드가 기대하는 키 이름 정리
+          if (l2.sourceId != null && l2.source_id == null) l2.source_id = l2.sourceId;
+          if (l2.sourceType != null && l2.source_type == null) l2.source_type = l2.sourceType;
+          return l2;
+        });
+      }
+      return s2;
+    });
+  }
+  return cloned;
+}
+
   async function onSubmit(payload: DraftEstimateCreatePayload) {
     setSaving(true);
     try {
       const res = await api<{ id: number; estimate_id?: number }>(`/api/estimates`, {
         method: "POST",
-        body: JSON.stringify(payload),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(normalizePayload(payload)),
       });
       const newId = Number((res as any)?.estimate_id ?? (res as any)?.id ?? 0);
       alert("견적서가 생성되었습니다.");

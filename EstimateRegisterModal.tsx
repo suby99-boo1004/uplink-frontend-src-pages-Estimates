@@ -700,8 +700,10 @@ export default function EstimateRegisterModal({ saving, onSubmit, mode = "create
           calc_mode: l.calc_mode,
           base_section_type: l.base_section_type ?? null,
           formula: l.formula ?? null,
-          source_type: l.source_type || "NONE",
-          source_id: l.source_id ?? null,
+          source_type: (l.source_type ?? "NONE"),
+          // PRODUCT 라인일 때만 source_id를 유지한다.
+          // (products 테이블에 없는 id를 PRODUCT로 보내면 FK 오류/또는 서버에서 NULL 처리되어 NONE으로 내려올 수 있음)
+          source_id: (l.source_type === "PRODUCT" ? (l.source_id ?? ((l as any).source_product?.id != null ? Number((l as any).source_product.id) : null)) : null),
           price_type: l.price_type ?? null,
         })),
       })),

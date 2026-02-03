@@ -296,7 +296,7 @@ export default function EstimateDetailPage() {
                     marginBottom: 8,
                   }}
                 >
-                  <div style={{ fontWeight: 900 }}>이전 견적서(최근 10개)</div>
+                  <div style={{ fontWeight: 900 }}>이전 견적서({prevChain.length}/10)</div>
                   <button
                     onClick={() => setPrevOpen((v) => !v)}
                     style={{

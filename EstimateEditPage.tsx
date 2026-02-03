@@ -27,14 +27,16 @@ function normalizeInitial(raw: any): DraftEstimateCreatePayload {
           spec: l?.spec ?? null,
           unit: l?.unit ?? "",
           qty: Number(l?.qty ?? 0),
-          unit_price: l?.unit_price === null || l?.unit_price === undefined ? null : Number(l.unit_price),
+          unit_price:
+            l?.unit_price === null || l?.unit_price === undefined ? null : Number(l.unit_price),
           amount: l?.amount === null || l?.amount === undefined ? null : Number(l.amount),
           remark: l?.remark ?? null,
           calc_mode: l?.calc_mode ?? "NORMAL",
           base_section_type: l?.base_section_type ?? null,
           formula: l?.formula ?? null,
           source_type: l?.source_type ?? "NONE",
-          source_id: l?.source_id === null || l?.source_id === undefined ? null : Number(l.source_id),
+          source_id:
+            l?.source_id === null || l?.source_id === undefined ? null : Number(l.source_id),
           price_type: l?.price_type ?? null,
         })),
       }))
@@ -66,10 +68,14 @@ function writeChain(id: number, chain: any[]) {
 }
 
 export default function EstimateEditPage() {
-  const { id } = useParams();
-  const estimateId = useMemo(() => Number(id || 0), [id]);
-  const nav = useNavigate();
+  const params = useParams();
+  // ✅ 라우트 파라미터 이름이 환경에 따라 다를 수 있어(id / estimateId / estimate_id 모두 지원)
+  const idParam =
+    (params as any)?.id ?? (params as any)?.estimateId ?? (params as any)?.estimate_id ?? null;
 
+  const estimateId = useMemo(() => Number(idParam || 0), [idParam]);
+
+  const nav = useNavigate();
   const [saving, setSaving] = useState(false);
   const [state, setState] = useState<LoadState>({ status: "idle" });
   const [rawDetail, setRawDetail] = useState<any>(null);
@@ -79,6 +85,7 @@ export default function EstimateEditPage() {
       setState({ status: "error", message: "견적서 ID가 올바르지 않습니다." });
       return;
     }
+
     let alive = true;
     (async () => {
       try {
@@ -98,6 +105,7 @@ export default function EstimateEditPage() {
         setState({ status: "error", message: msg });
       }
     })();
+
     return () => {
       alive = false;
     };
@@ -120,10 +128,7 @@ export default function EstimateEditPage() {
       nav(`/estimates/${newId}`);
     } catch (e: any) {
       const msg =
-        e?.response?.data?.detail ||
-        e?.response?.data?.message ||
-        e?.message ||
-        "수정 저장에 실패했습니다.";
+        e?.response?.data?.detail || e?.response?.data?.message || e?.message || "수정 저장에 실패했습니다.";
       alert(msg);
     } finally {
       setSaving(false);
@@ -131,38 +136,42 @@ export default function EstimateEditPage() {
   }
 
   return (
-    <div style={{ padding: 16 }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 12 }}>
-        <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
-          <div style={{ fontSize: 18, fontWeight: 900 }}>견적서 수정</div>
-          <div style={{ fontSize: 12, color: "#94A3B8" }}>ID: {estimateId}</div>
-        </div>
-
-        <button
-          onClick={() => nav(`/estimates/${estimateId}`)}
-          style={{
-            padding: "10px 12px",
-            borderRadius: 12,
-            border: "1px solid #334155",
-            background: "rgba(15,23,42,0.4)",
-            color: "#E2E8F0",
-            fontWeight: 800,
-            cursor: "pointer",
-          }}
-        >
-          돌아가기
-        </button>
+    <div style={{ padding: 18 }}>
+      <div style={{ fontSize: 18, fontWeight: 900, color: "#F8FAFC", marginBottom: 10 }}>
+        견적서 수정
       </div>
 
-      {state.status === "loading" && <div style={{ color: "#CBD5E1", padding: 12 }}>불러오는 중...</div>}
-      {state.status === "error" && <div style={{ color: "#FCA5A5", padding: 12 }}>{state.message}</div>}
+      <div style={{ color: "#94A3B8", fontSize: 12, marginBottom: 12 }}>ID: {estimateId}</div>
+
+      <button
+        onClick={() => nav(`/estimates/${estimateId}`)}
+        style={{
+          padding: "10px 12px",
+          borderRadius: 12,
+          border: "1px solid #334155",
+          background: "rgba(15,23,42,0.4)",
+          color: "#E2E8F0",
+          fontWeight: 800,
+          cursor: "pointer",
+          marginBottom: 12,
+        }}
+      >
+        돌아가기
+      </button>
+
+      {state.status === "loading" && (
+        <div style={{ color: "#E2E8F0", padding: 12 }}>불러오는 중...</div>
+      )}
+
+      {state.status === "error" && (
+        <div style={{ color: "#FCA5A5", padding: 12, fontWeight: 900 }}>{state.message}</div>
+      )}
 
       {state.status === "ready" && (
         <EstimateRegisterModal
-          saving={saving}
-          mode="update"
+          mode="edit"
           initial={state.initial}
-          submitLabel="수정 저장(신규 버전 생성)"
+          saving={saving}
           onSubmit={handleSubmit}
         />
       )}

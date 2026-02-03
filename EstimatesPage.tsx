@@ -48,7 +48,7 @@ export default function EstimatesPage() {
   const roleId: number | null = (user as any)?.role_id ?? null;
 
   const canManage = Boolean(user);
-  const isAdmin = Number(roleId) == 6;
+  const isAdmin = Number(roleId) === 6;
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -61,7 +61,7 @@ export default function EstimatesPage() {
   const [rows, setRows] = useState<EstimateRow[]>([]);
   const debounceRef = useRef<number | null>(null);
 
-  // 서버에서 견적서 목록을 불러와서(영구 저장) 화면에 표시
+  // 서버에서 을 불러와서(영구 저장) 화면에 표시
   useEffect(() => {
     let mounted = true;
     (async () => {
@@ -72,10 +72,16 @@ export default function EstimatesPage() {
         const mapped: EstimateRow[] = list
           .map((r: any) => {
             const bs = String(r?.business_state ?? r?.status ?? "ONGOING").toUpperCase();
-            const st: EstimateStatus = bs === "DONE" ? "done" : bs === "CANCELED" ? "canceled" : "ongoing";
+            const st: EstimateStatus =
+              bs === "DONE" ? "done" : bs === "CANCELED" ? "canceled" : "ongoing";
 
             const createdAt =
-              r?.issue_date ?? r?.created_at ?? r?.createdAt ?? r?.updated_at ?? new Date().toISOString();
+              r?.issue_date ??
+              r?.created_at ??
+              r?.createdAt ??
+              r?.updated_at ??
+              new Date().toISOString();
+
             const updatedAt = r?.updated_at ?? r?.updatedAt ?? createdAt;
 
             const title = r?.project_name ?? r?.title ?? r?.name ?? "견적서";
@@ -194,7 +200,6 @@ export default function EstimatesPage() {
   async function onDeleteRow(e: React.MouseEvent, id: number) {
     e.stopPropagation();
     if (!isAdmin) return;
-
     const ok = window.confirm("정말 삭제하시겠습니까?\n(구견적서 포함 전체 삭제, 복구 불가)");
     if (!ok) return;
 
@@ -207,41 +212,31 @@ export default function EstimatesPage() {
     }
   }
 
+  // ✅ 관리자만 '삭제' 컬럼을 보여줌(비관리자는 '-' 표시도 없앰)
+  const gridTemplateColumns = isAdmin
+    ? "120px 1fr 220px 160px 160px 90px"
+    : "120px 1fr 220px 160px 160px";
+
   return (
-    <div style={{ padding: 16 }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 14 }}>
-        <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
-          <div style={{ fontSize: 18, fontWeight: 900 }}>견적서</div>
-          <div style={{ fontSize: 12, color: "#94A3B8" }}>견적서 리스트</div>
-        </div>
-      </div>
+    <div style={{ padding: 18 }}>
+      <div style={{ fontSize: 18, fontWeight: 900, color: "#F8FAFC", marginBottom: 14 }}>견적서</div>
 
-      <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 12 }}>
-        <select
-          value={status}
-          onChange={(e) => setStatus(e.target.value as EstimateStatus)}
-          style={{
-            fontSize: 12,
-            padding: "8px 10px",
-            borderRadius: 10,
-            border: "1px solid #334155",
-            background: "rgba(15,23,42,0.35)",
-            color: "#F8FAFC",
-            outline: "none",
-            cursor: "pointer",
-          }}
-        >
-          {(["ongoing", "done", "canceled"] as EstimateStatus[]).map((s) => (
-            <option key={s} value={s}>
-              {statusLabel(s)}
-            </option>
-          ))}
-        </select>
+      <div
+        style={{
+          display: "flex",
+          gap: 10,
+          alignItems: "center",
+          justifyContent: "space-between",
+          marginBottom: 12,
+          flexWrap: "wrap",
+        }}
+      >
+        <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+          <div style={{ color: "#CBD5E1", fontWeight: 800 }}>견적서 리스트</div>
 
-        {status !== "ongoing" && (
           <select
-            value={year === "" ? "" : String(year)}
-            onChange={(e) => setYear(e.target.value ? Number(e.target.value) : "")}
+            value={status}
+            onChange={(e) => setStatus(e.target.value as EstimateStatus)}
             style={{
               fontSize: 12,
               padding: "8px 10px",
@@ -251,43 +246,68 @@ export default function EstimatesPage() {
               color: "#F8FAFC",
               outline: "none",
               cursor: "pointer",
-              minWidth: 110,
             }}
           >
-            {availableYears.map((y) => (
-              <option key={y} value={String(y)}>
-                {y}년
+            {(["ongoing", "done", "canceled"] as EstimateStatus[]).map((s) => (
+              <option key={s} value={s}>
+                {statusLabel(s)}
               </option>
             ))}
           </select>
-        )}
 
-        <input
-          value={q}
-          onChange={(e) => onQChange(e.target.value)}
-          placeholder="검색 (건명/수신/담당자)"
-          style={{
-            padding: "10px 12px",
-            minWidth: 320,
-            borderRadius: 12,
-            border: "1px solid #334155",
-            background: "rgba(15,23,42,0.4)",
-            color: "#F8FAFC",
-            outline: "none",
-          }}
-        />
+          {status !== "ongoing" && (
+            <select
+              value={year}
+              onChange={(e) => setYear(e.target.value ? Number(e.target.value) : "")}
+              style={{
+                fontSize: 12,
+                padding: "8px 10px",
+                borderRadius: 10,
+                border: "1px solid #334155",
+                background: "rgba(15,23,42,0.35)",
+                color: "#F8FAFC",
+                outline: "none",
+                cursor: "pointer",
+                minWidth: 110,
+              }}
+            >
+              {availableYears.map((y) => (
+                <option key={y} value={y}>
+                  {y}년
+                </option>
+              ))}
+            </select>
+          )}
+
+          <input
+            value={q}
+            onChange={(e) => onQChange(e.target.value)}
+            placeholder="검색 (건명/수신/담당자)"
+            style={{
+              padding: "10px 12px",
+              minWidth: 320,
+              borderRadius: 12,
+              border: "1px solid #334155",
+              background: "rgba(15,23,42,0.4)",
+              color: "#F8FAFC",
+              outline: "none",
+            }}
+          />
+        </div>
 
         {canManage && (
           <button
             onClick={() => navigate("/estimates/new")}
             style={{
-              fontSize: 12,
+				width: 130,
+              height: 40,
+              fontSize: 16,
               padding: "10px 12px",
               borderRadius: 12,
+			  fontWeight: 900,
               border: "1px solid #1D4ED8",
               background: "linear-gradient(180deg, #2563EB 0%, #1D4ED8 100%)",
               color: "#F8FAFC",
-              fontWeight: 900,
               cursor: "pointer",
             }}
           >
@@ -296,94 +316,90 @@ export default function EstimatesPage() {
         )}
       </div>
 
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-        <div style={{ fontWeight: 900 }}>견적서 목록</div>
-        <div style={{ fontSize: 12, color: "#94A3B8" }}>{filtered.length}건</div>
+      <div style={{ color: "#94A3B8", fontSize: 12, marginBottom: 10 }}></div>
+
+      <div style={{ color: "#F8FAFC", fontWeight: 900, marginBottom: 10 }}></div>
+
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns,
+          gap: 0,
+          padding: "10px 12px",
+          borderRadius: 12,
+          border: "1px solid rgba(148,163,184,0.18)",
+          background: "rgba(15,23,42,0.35)",
+          color: "#E2E8F0",
+          fontWeight: 900,
+        }}
+      >
+        <div>날짜</div>
+        <div>건명</div>
+        <div>수신(발주처)</div>
+        <div>견적 담당자</div>
+        <div style={{ textAlign: "right" }}>합계(원)</div>
+        {isAdmin && <div style={{ textAlign: "center" }}>삭제</div>}
       </div>
 
-      <div style={{ border: "1px solid rgba(148,163,184,0.15)", borderRadius: 14, overflow: "hidden" }}>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "120px 1fr 220px 160px 160px 90px",
-            gap: 0,
-            padding: "10px 12px",
-            background: "rgba(148,163,184,0.10)",
-            color: "#E2E8F0",
-            fontSize: 12,
-            fontWeight: 900,
-          }}
-        >
-          <div>날짜</div>
-          <div>건명</div>
-          <div>수신(발주처)</div>
-          <div>견적 담당자</div>
-          <div style={{ textAlign: "right" }}>합계(원)</div>
-          <div style={{ textAlign: "center" }}>삭제</div>
-        </div>
-
-        {filtered.length === 0 ? (
-          <div style={{ padding: 14, color: "#CBD5E1" }}>
-            표시할 견적서가 없습니다.
-            <div style={{ marginTop: 6, fontSize: 12, color: "#94A3B8" }}>
-              {canManage ? "상단의 ‘신규 등록’으로 견적서를 만들어보세요." : "권한이 없어 신규 등록이 불가합니다."}
-            </div>
+      {filtered.length === 0 ? (
+        <div style={{ padding: 18, color: "#CBD5E1" }}>
+          <div style={{ fontWeight: 900, marginBottom: 6 }}>표시할 견적서가 없습니다.</div>
+          <div style={{ fontSize: 12 }}>
+            {canManage ? "상단의 ‘신규 등록’으로 견적서를 만들어보세요." : "권한이 없어 신규 등록이 불가합니다."}
           </div>
-        ) : (
-          filtered.map((r) => {
-            const parts = fmtParts(r.createdAt || r.updatedAt);
-            return (
-              <div
-                key={r.id}
-                onClick={() => navigate(`/estimates/${r.id}`)}
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "120px 1fr 220px 160px 160px 90px",
-                  gap: 0,
-                  padding: "10px 12px",
-                  borderTop: "1px solid rgba(148,163,184,0.15)",
-                  cursor: "pointer",
-                  alignItems: "center",
-                }}
-              >
-                <div style={{ color: "#E2E8F0", fontSize: 12 }}>
-                  <div>{parts.date}</div>
-                  <div style={{ fontSize: 12, opacity: 0.8 }}>{parts.time}</div>
-                </div>
-
-                <div style={{ color: "#F8FAFC", fontWeight: 900 }}>{r.title}</div>
-                <div style={{ color: "#CBD5E1", fontSize: 12 }}>{r.receiver}</div>
-                <div style={{ color: "#CBD5E1", fontSize: 12 }}>{r.manager}</div>
-                <div style={{ color: "#F8FAFC", fontWeight: 900, textAlign: "right" }}>
-                  {Number(r.totalAmount || 0).toLocaleString()}
-                </div>
-
-                <div style={{ textAlign: "center" }}>
-                  {isAdmin ? (
-                    <button
-                      onClick={(e) => onDeleteRow(e, r.id)}
-                      style={{
-                        fontSize: 12,
-                        padding: "8px 10px",
-                        borderRadius: 10,
-                        border: "1px solid rgba(239,68,68,0.55)",
-                        background: "rgba(239,68,68,0.12)",
-                        color: "#FCA5A5",
-                        fontWeight: 900,
-                        cursor: "pointer",
-                      }}
-                    >
-                      삭제
-                    </button>
-                  ) : (
-                    <span style={{ color: "#64748B", fontSize: 12 }}>-</span>
-                  )}
-                </div>
+        </div>
+      ) : (
+        filtered.map((r) => {
+          const parts = fmtParts(r.createdAt || r.updatedAt);
+          return (
+            <div
+              key={r.id}
+              onClick={() => navigate(`/estimates/${r.id}`)}
+              style={{
+                display: "grid",
+                gridTemplateColumns,
+                gap: 0,
+                padding: "10px 12px",
+                borderTop: "1px solid rgba(148,163,184,0.15)",
+                cursor: "pointer",
+                alignItems: "center",
+              }}
+            >
+              <div>
+                <div>{parts.date}</div>
+                <div style={{ fontSize: 12, color: "#94A3B8" }}>{parts.time}</div>
               </div>
-            );
-          })
-        )}
-      </div>
+
+              <div style={{ fontWeight: 900, color: "#F8FAFC" }}>{r.title}</div>
+              <div>{r.receiver}</div>
+              <div>{r.manager}</div>
+              <div style={{ textAlign: "right", fontWeight: 900 }}>
+                {Number(r.totalAmount || 0).toLocaleString()}
+              </div>
+
+              {isAdmin && (
+                <div style={{ textAlign: "center" }}>
+                  <button
+                    onClick={(e) => onDeleteRow(e, r.id)}
+                    style={{
+                      fontSize: 12,
+                      padding: "8px 10px",
+                      borderRadius: 10,
+                      border: "1px solid rgba(239,68,68,0.55)",
+                      background: "rgba(239,68,68,0.12)",
+                      color: "#FCA5A5",
+                      fontWeight: 900,
+                      cursor: "pointer",
+                    }}
+                  >
+                    삭제
+                  </button>
+                </div>
+              )}
+            </div>
+          );
+        })
+      )}
     </div>
   );
 }

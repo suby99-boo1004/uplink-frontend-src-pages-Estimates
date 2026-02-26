@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState , useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { http } from "../../api/http";
 import companyInfoImg from "../../assets/company_info.png";
@@ -74,7 +74,15 @@ function ymdOnly(iso?: string) {
 }
 
 function money(n?: number | null) {
-  return Number(n || 0).toLocaleString();
+  const v = Number(n ?? 0);
+  const safe = Number.isFinite(v) ? v : 0;
+  return Math.floor(safe).toLocaleString();
+}
+
+function moneyFloat(n?: number | null) {
+  const v = Number(n ?? 0);
+  const safe = Number.isFinite(v) ? v : 0;
+  return safe.toLocaleString();
 }
 
 function readPrevChain(id: number): any[] {
@@ -99,6 +107,52 @@ export default function EstimateDetailPage() {
   // ✅ 구버전(최근 10개) – sessionStorage 기반
   const [prevChain, setPrevChain] = useState<any[]>([]);
   const [prevOpen, setPrevOpen] = useState(false);
+
+  const printRef = useRef<HTMLDivElement | null>(null);
+
+  function sanitizeFilenamePart(s: string) {
+    return String(s || "")
+      .trim()
+      .replace(/[\/:*?"<>|]/g, "") // Windows forbidden
+      .replace(/\s+/g, "_")
+      .slice(0, 60);
+  }
+
+  async function downloadPdf() {
+    if (!data) return;
+
+    const dateStr = ymdOnly((data as any).issue_date || (data as any).created_at || (data as any).createdAt || (data as any).updated_at || (data as any).updatedAt).replace(/-/g, "");
+    const receiver = sanitizeFilenamePart((data as any).receiver_name || "");
+    const proj = sanitizeFilenamePart((data as any).project_name || "");
+    const filename = `${dateStr}${receiver ? "_" + receiver : ""}${proj ? "_" + proj : ""}.pdf`;
+
+    const el = printRef.current;
+    if (!el) {
+      alert("PDF 생성 영역을 찾을 수 없습니다.");
+      return;
+    }
+
+    // 화면을 건드리지 않고 출력 스타일만 적용하기 위해 클래스 토글
+    document.body.classList.add("pdf-export");
+    try {
+      const mod: any = await import("html2pdf.js");
+      const html2pdf = mod?.default ?? mod;
+      await html2pdf()
+        .set({
+          margin: [10, 10, 12, 10], // top, left, bottom, right (mm)
+          filename,
+          image: { type: "jpeg", quality: 0.98 },
+          html2canvas: { scale: 2, useCORS: true },
+          jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+          pagebreak: { mode: ["css", "legacy"] },
+        })
+        .from(el)
+        .save();
+    } finally {
+      document.body.classList.remove("pdf-export");
+    }
+  }
+
 
   useEffect(() => {
     const id = Number(estimateId);
@@ -160,9 +214,6 @@ export default function EstimateDetailPage() {
 <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center", gap: 12 }}>
         <div />
 
-        {/* ✅ 페이지 상단 중앙 타이틀 */}
-        <div style={{ textAlign: "center", fontSize: 28, fontWeight: 900, letterSpacing: 2 }}>견적서</div>
-
         {/* ✅ 오른쪽 상단 버튼 순서: 목록으로 → 견적서 수정 → PDF/프린트 (인쇄 시 숨김) */}
         <div className="no-print" style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
           <button
@@ -203,7 +254,7 @@ export default function EstimateDetailPage() {
           </button>
 
           <button
-            onClick={() => window.print()}
+            onClick={downloadPdf}
             style={{
               fontSize: 12,
               padding: "10px 12px",
@@ -228,36 +279,38 @@ export default function EstimateDetailPage() {
         ) : !data ? (
           <div style={{ color: "#CBD5E1", padding: 12 }}>데이터가 없습니다.</div>
         ) : (
-          <div>
-            <div className="print-header-row">
-              <div className="print-header-left">
+          <div ref={printRef} className="estimate-print">
+            {/* ✅ PDF/출력에도 포함되는 문서 타이틀 */}
+            <div style={{ textAlign: "center", fontSize: 35, fontWeight: 900, letterSpacing: 2, marginTop: 4, marginBottom: 10 }}>견  적  서</div>
+            <div className="print-header-row" style={{ display: "flex", gap: 24, alignItems: "flex-start", justifyContent: "space-between" }}>
+              <div className="print-header-left" style={{ flex: "0 0 58%", maxWidth: "58%" }}>
                 {/* ✅ 문서 헤더: 견적서 명 */}
-            <div style={{ marginTop: 14, marginBottom: 10, fontSize: 14 }}>
+            <div style={{ marginTop: 14, marginBottom: 10, fontSize: 15 }}>
               <span style={{ fontWeight: 900 }}>🧾 견적서 명 :</span>{" "}<span style={{ fontWeight: 700 }}>{data.project_name || "-"}</span>
             </div>
 
             {/* ✅ 수신/작성자/작성일 + 합계/부가세/총계: 표 형식 */}
-            <table className="print-info-table" style={{ width: "100%", borderCollapse: "collapse", marginBottom: 16 }}>
+            <table className="print-info-table" style={{ width: "100%", borderCollapse: "collapse", marginBottom: 16, border: "1px solid #D1D5DB" }}>
               <tbody>
                 <tr>
-                  <th style={{ width: "16%" }}>수신</th>
-                  <td style={{ width: "34%" }}>{data.receiver_name || "-"}</td>
-                  <th style={{ width: "16%" }}>작성자</th>
-                  <td style={{ width: "34%" }}>{data.author_name || "-"}</td>
+                  <th style={{ border: "1px solid #D1D5DB", background: "#F3F4F6", padding: "10px 12px", fontSize: 12, color: "#111827" }}>수신</th>
+                  <td >{data.receiver_name || "-"}</td>
+                  <th style={{ border: "1px solid #D1D5DB", background: "#F3F4F6", padding: "10px 12px", fontSize: 12, color: "#111827" }}>작성자</th>
+                  <td >{data.author_name || "-"}</td>
                 </tr>
                 <tr>
-                  <th>작성일</th>
-                  <td colSpan={3}>{ymdOnly((data as any).issue_date || (data as any).created_at || (data as any).createdAt || (data as any).updated_at || (data as any).updatedAt)}</td>
+                  <th style={{ border: "1px solid #D1D5DB", background: "#F3F4F6", padding: "10px 12px", fontSize: 12, color: "#111827" }}>작성일</th>
+                  <td colSpan={3} style={{ border: "1px solid #D1D5DB" }}>{ymdOnly((data as any).issue_date || (data as any).created_at || (data as any).createdAt || (data as any).updated_at || (data as any).updatedAt)}</td>
                 </tr>
                 <tr>
-                  <th>합계</th>
+                  <th style={{ border: "1px solid #D1D5DB", background: "#F3F4F6", padding: "10px 12px", fontSize: 12, color: "#111827" }}>합계</th>
                   <td>{money(data.subtotal)}원</td>
-                  <th>부가세</th>
+                  <th style={{ border: "1px solid #D1D5DB", background: "#F3F4F6", padding: "10px 12px", fontSize: 12, color: "#111827" }}>부가세</th>
                   <td>{money(data.tax)}원</td>
                 </tr>
                 <tr>
-                  <th>총계</th>
-                  <td colSpan={3} style={{ fontWeight: 900 }}>{money(data.total)}원</td>
+                  <th style={{ border: "1px solid #D1D5DB", background: "#F3F4F6", padding: "10px 12px", fontSize: 12, color: "#111827" }}>총계</th>
+                  <td colSpan={3} style={{ border: "1px solid #D1D5DB" }}>{money(data.total)}원</td>
                 </tr>
               </tbody>
             </table>
@@ -267,8 +320,8 @@ export default function EstimateDetailPage() {
             </div>
               </div>
               {/* ✅ 회사 정보 이미지(프린트 전용) - 표 오른쪽 */}
-              <div className="print-only print-header-right">
-                <img src={companyInfoImg} alt="회사 정보" />
+              <div className="print-only print-header-right" style={{ flex: "0 0 40%", maxWidth: "38%", display: "flex", justifyContent: "flex-end", paddingRight: 12, boxSizing: "border-box", overflow: "visible" }}>
+                <img src={companyInfoImg} alt="회사 정보" style={{ maxWidth: "95%", height: "auto", objectFit: "contain" }} />
               </div>
             </div>
 

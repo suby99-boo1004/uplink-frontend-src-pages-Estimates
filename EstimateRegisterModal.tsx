@@ -419,10 +419,10 @@ function compute(sections: DraftSection[]) {
       if (line.calc_mode !== "NORMAL") continue;
       const qty = Number(line.qty || 0);
       const up = Number(line.unit_price || 0);
-      line.amount = Math.round(qty * up);
+      line.amount = Math.floor(qty * up);
     }
     const sub = sec.lines.reduce((a, b) => a + Number(b.amount || 0), 0);
-    subtotalByType[sec.section_type] = Math.round(sub);
+    subtotalByType[sec.section_type] = Math.floor(sub);
   }
 
   // PERCENT_OF_SUBTOTAL
@@ -432,9 +432,9 @@ function compute(sections: DraftSection[]) {
       const base = line.base_section_type ? subtotalByType[line.base_section_type] : 0;
       const pct = Number(line.qty || 0) / 100.0;
       line.unit_price = null;
-      line.amount = Math.round(base * pct);
+      line.amount = Math.floor(base * pct);
     }
-    subtotalByType[sec.section_type] = Math.round(sec.lines.reduce((a, b) => a + Number(b.amount || 0), 0));
+    subtotalByType[sec.section_type] = Math.floor(sec.lines.reduce((a, b) => a + Number(b.amount || 0), 0));
   }
 
   // FORMULA (샘플 2종만 지원: (MATERIAL+LABOR)*0.06 / (LABOR+EXPENSE+OVERHEAD)*0.15)
@@ -455,13 +455,13 @@ function compute(sections: DraftSection[]) {
         val = base * (Number(line.qty || 0) / 100.0);
       }
       line.unit_price = null;
-      line.amount = Math.round(val);
+      line.amount = Math.floor(val);
     }
-    subtotalByType[sec.section_type] = Math.round(sec.lines.reduce((a, b) => a + Number(b.amount || 0), 0));
+    subtotalByType[sec.section_type] = Math.floor(sec.lines.reduce((a, b) => a + Number(b.amount || 0), 0));
   }
 
   const subtotal = Object.values(subtotalByType).reduce((a, b) => a + b, 0);
-  const tax = Math.round(subtotal * 0.1);
+  const tax = Math.floor(subtotal * 0.1);
   const total = subtotal + tax;
 
   return { sections: clone, subtotalByType, subtotal, tax, total };

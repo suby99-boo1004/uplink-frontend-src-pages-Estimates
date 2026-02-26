@@ -33,6 +33,7 @@ type EstimateDetail = {
   project_id: number;
   project_name: string;
   receiver_name: string;
+  memo?: string | null;
   author_name: string;
   issue_date: string; // ISO
   subtotal: number;
@@ -283,6 +284,30 @@ export default function EstimateDetailPage() {
                 </div>
               ))
             )}
+			
+			<div style={{ fontSize: 12, fontWeight: 900, color: "#E2E8F0", marginBottom: 6 }}>비고 내용</div>
+			
+			{/* ✅ 비고(헤더 메모) – 저장 후 하단 표시 */}
+            {((data as any)?.memo ?? "").trim() ? (
+              <div
+                style={{
+                  marginTop: 18,
+                  padding: 12,
+                  borderRadius: 12,
+                  border: "1px solid #334155",
+                  background: "rgba(15,23,42,0.25)",
+                }}
+              >
+                
+                <div style={{ fontSize: 13, color: "#F1F5F9", lineHeight: 1.5, whiteSpace: "pre-wrap" }}>
+                  {(data as any).memo}
+                </div>
+              </div>
+            ) : null}
+			
+			
+			
+			
 
             {/* ✅ 이전 견적서(최근 10개) – 하단 표시 */}
             {prevChain.length > 0 && (
@@ -421,6 +446,9 @@ export default function EstimateDetailPage() {
                 )}
               </div>
             )}
+
+            
+
           </div>
         )}
       </div>

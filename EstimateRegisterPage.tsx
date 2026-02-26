@@ -106,15 +106,15 @@ function normalizePayload(payload: any) {
             disabled={saving}
             onClick={() => navigate("/estimates")}
             style={{
-              fontSize: 12,
+              
               padding: "10px 12px",
               borderRadius: 12,
               border: "1px solid #334155",
-              background: "rgba(15,23,42,0.4)",
+              background: "linear-gradient(180deg, #2563EB 0%, #1D4ED8 100%)",
               color: "#F8FAFC",
               fontWeight: 900,
               cursor: "pointer",
-              opacity: saving ? 0.6 : 1,
+              
             }}
           >
             취소

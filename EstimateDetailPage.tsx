@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { http } from "../../api/http";
+import companyInfoImg from "../../assets/company_info.png";
 
 type SectionType = "MATERIAL" | "LABOR" | "EXPENSE" | "OVERHEAD" | "PROFIT" | "MANUAL";
 
@@ -61,6 +62,17 @@ function ymd(iso?: string) {
   const ymdOnly = parts.length === 3 ? `${parts[0]}-${parts[1]}-${parts[2]}` : d;
   return hhmm ? `${ymdOnly} ${hhmm}` : ymdOnly;
 }
+
+// 작성일(프린트) - 시간 제외
+function ymdOnly(iso?: string) {
+  if (!iso) return "-";
+  const safe = String(iso).replace(" ", "T");
+  const [dRaw] = safe.split("T");
+  const d = dRaw || "";
+  const parts = d.split("-");
+  return parts.length === 3 ? `${parts[0]}-${parts[1]}-${parts[2]}` : d;
+}
+
 function money(n?: number | null) {
   return Number(n || 0).toLocaleString();
 }
@@ -145,14 +157,14 @@ export default function EstimateDetailPage() {
 
   return (
     <div style={{ padding: 16 }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-        <div>
-          <div style={{ fontSize: 18, fontWeight: 900 }}>견적서 상세</div>
-          <div style={{ fontSize: 12, color: "#94A3B8" }}>{data ? `#${data.id}` : ""}</div>
-        </div>
+<div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center", gap: 12 }}>
+        <div />
 
-        {/* ✅ 오른쪽 상단 버튼 순서: 목록으로 → 견적서 수정 → PDF/프린트 */}
-        <div style={{ display: "flex", gap: 8 }}>
+        {/* ✅ 페이지 상단 중앙 타이틀 */}
+        <div style={{ textAlign: "center", fontSize: 28, fontWeight: 900, letterSpacing: 2 }}>견적서</div>
+
+        {/* ✅ 오른쪽 상단 버튼 순서: 목록으로 → 견적서 수정 → PDF/프린트 (인쇄 시 숨김) */}
+        <div className="no-print" style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
           <button
             onClick={() => navigate("/estimates")}
             style={{
@@ -217,17 +229,46 @@ export default function EstimateDetailPage() {
           <div style={{ color: "#CBD5E1", padding: 12 }}>데이터가 없습니다.</div>
         ) : (
           <div>
-            <div style={{ marginBottom: 12, padding: 12, borderRadius: 14, border: "1px solid #1F2937" }}>
-              <div style={{ fontWeight: 900, marginBottom: 6 }}>{data.project_name || "프로젝트"}</div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 12, fontSize: 13, color: "#E2E8F0" }}>
-                <div>수신: {data.receiver_name || "-"}</div>
-                <div>작성자: {data.author_name || "-"}</div>
-                <div>작성일: {ymd((data as any).issue_date || (data as any).created_at || (data as any).createdAt || (data as any).updated_at || (data as any).updatedAt)}</div>
+            <div className="print-header-row">
+              <div className="print-header-left">
+                {/* ✅ 문서 헤더: 견적서 명 */}
+            <div style={{ marginTop: 14, marginBottom: 10, fontSize: 14 }}>
+              <span style={{ fontWeight: 900 }}>🧾 견적서 명 :</span>{" "}<span style={{ fontWeight: 700 }}>{data.project_name || "-"}</span>
+            </div>
+
+            {/* ✅ 수신/작성자/작성일 + 합계/부가세/총계: 표 형식 */}
+            <table className="print-info-table" style={{ width: "100%", borderCollapse: "collapse", marginBottom: 16 }}>
+              <tbody>
+                <tr>
+                  <th style={{ width: "16%" }}>수신</th>
+                  <td style={{ width: "34%" }}>{data.receiver_name || "-"}</td>
+                  <th style={{ width: "16%" }}>작성자</th>
+                  <td style={{ width: "34%" }}>{data.author_name || "-"}</td>
+                </tr>
+                <tr>
+                  <th>작성일</th>
+                  <td colSpan={3}>{ymdOnly((data as any).issue_date || (data as any).created_at || (data as any).createdAt || (data as any).updated_at || (data as any).updatedAt)}</td>
+                </tr>
+                <tr>
+                  <th>합계</th>
+                  <td>{money(data.subtotal)}원</td>
+                  <th>부가세</th>
+                  <td>{money(data.tax)}원</td>
+                </tr>
+                <tr>
+                  <th>총계</th>
+                  <td colSpan={3} style={{ fontWeight: 900 }}>{money(data.total)}원</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div style={{ marginTop: -8, marginBottom: 14, fontSize: 12, color: "#111827", fontWeight: 700 }}>
+              * 견적 유효 기간 : 30일
+            </div>
               </div>
-              <div style={{ marginTop: 10, display: "flex", flexWrap: "wrap", gap: 12, fontSize: 13 }}>
-                <div>합계(공급가): <b>{money(data.subtotal)}원</b></div>
-                <div>부가세: <b>{money(data.tax)}원</b></div>
-                <div>총계: <b>{money(data.total)}원</b></div>
+              {/* ✅ 회사 정보 이미지(프린트 전용) - 표 오른쪽 */}
+              <div className="print-only print-header-right">
+                <img src={companyInfoImg} alt="회사 정보" />
               </div>
             </div>
 
@@ -235,7 +276,7 @@ export default function EstimateDetailPage() {
               <div style={{ color: "#CBD5E1", padding: 12 }}>섹션/항목이 없습니다.</div>
             ) : (
               sections.map((sec: any, idx: number) => (
-                <div key={`${sec.section_type}-${sec.section_order}-${idx}`} style={{ marginBottom: 16 }}>
+                <div className="print-avoid-break" key={`${sec.section_type}-${sec.section_order}-${idx}`} style={{ marginBottom: 16 }}>
                   <div style={{ fontWeight: 900, marginBottom: 8 }}>
                     {idx + 1}. {sectionLabel(sec.section_type)}
                   </div>
@@ -285,21 +326,22 @@ export default function EstimateDetailPage() {
               ))
             )}
 			
-			<div style={{ fontSize: 12, fontWeight: 900, color: "#E2E8F0", marginBottom: 6 }}>비고 내용</div>
+			<div className="print-memo-title" style={{ fontSize: 12, fontWeight: 900, marginBottom: 6 }}>비고 내용</div>
 			
 			{/* ✅ 비고(헤더 메모) – 저장 후 하단 표시 */}
             {((data as any)?.memo ?? "").trim() ? (
               <div
+                className="print-memo-box"
                 style={{
                   marginTop: 18,
                   padding: 12,
                   borderRadius: 12,
-                  border: "1px solid #334155",
-                  background: "rgba(15,23,42,0.25)",
+                  border: "1px solid #cccccc",
+                  background: "#ffffff",
                 }}
               >
                 
-                <div style={{ fontSize: 13, color: "#F1F5F9", lineHeight: 1.5, whiteSpace: "pre-wrap" }}>
+                <div style={{ fontSize: 13, color: "#000000", lineHeight: 1.5, whiteSpace: "pre-wrap" }}>
                   {(data as any).memo}
                 </div>
               </div>
@@ -311,7 +353,7 @@ export default function EstimateDetailPage() {
 
             {/* ✅ 이전 견적서(최근 10개) – 하단 표시 */}
             {prevChain.length > 0 && (
-              <div style={{ marginTop: 18, paddingTop: 12, borderTop: "1px solid #1F2937" }}>
+              <div className="no-print" style={{ marginTop: 18, paddingTop: 12, borderTop: "1px solid #1F2937" }}>
                 <div
                   style={{
                     display: "flex",

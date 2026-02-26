@@ -699,7 +699,17 @@ export default function EstimateRegisterModal({ saving, onSubmit, mode = "create
     setSections((prev) => prev.filter((s) => s.id !== id).map((x, i) => ({ ...x, section_order: i + 1 })));
   }
 
-  function addLine(sectionId: string, preset?: Partial<DraftLine>) {
+  
+  function updateSectionTitle(sectionId: string, title: string) {
+    setSections((prev) =>
+      prev.map((s) => {
+        if (s.id !== sectionId) return s;
+        return { ...s, title };
+      })
+    );
+  }
+
+function addLine(sectionId: string, preset?: Partial<DraftLine>) {
     setSections((prev) =>
       prev.map((s) => {
         if (s.id !== sectionId) return s;
@@ -977,8 +987,31 @@ export default function EstimateRegisterModal({ saving, onSubmit, mode = "create
           computed.sections.map((sec) => (
             <div key={sec.id} style={{ marginBottom: 14, border: "1px solid rgba(148,163,184,0.15)", borderRadius: 14, overflow: "hidden" }}>
               <div style={{ padding: 10, display: "flex", alignItems: "center", gap: 10, background: "rgba(15,23,42,0.55)" }}>
-                <div style={{ fontWeight: 900 }}>
-                  {sec.section_order}. {sec.title}
+                <div style={{ fontWeight: 900, display: "flex", alignItems: "center", gap: 8 }}>
+                  <span>{sec.section_order}.</span>
+                  {sec.section_type === "MANUAL" ? (
+                    <input
+                      value={sec.title}
+                      onChange={(e) => updateSectionTitle(sec.id, e.target.value)}
+                      onBlur={() => {
+                        const v = String(sec.title || "").trim();
+                        if (!v) updateSectionTitle(sec.id, "수동");
+                      }}
+                      placeholder="수동(수정 가능)"
+                      style={{
+                        padding: "6px 10px",
+                        borderRadius: 10,
+                        border: "1px solid #334155",
+                        background: "rgba(15,23,42,0.35)",
+                        color: "#F8FAFC",
+                        outline: "none",
+                        fontWeight: 900,
+                        width: 220,
+                      }}
+                    />
+                  ) : (
+                    <span>{sec.title}</span>
+                  )}
                 </div>
                 <div style={{ marginLeft: "auto", display: "flex", gap: 8, alignItems: "center" }}>
                   <div style={{ fontSize: 12, color: "#94A3B8" }}>

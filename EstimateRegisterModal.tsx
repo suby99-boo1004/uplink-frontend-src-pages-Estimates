@@ -985,24 +985,44 @@ export default function EstimateRegisterModal({ saving, onSubmit, mode = "create
                     소계: <span style={{ color: "#F8FAFC", fontWeight: 900 }}>{money(sec.lines.reduce((a, b) => a + Number(b.amount || 0), 0))}</span>
                   </div>
                   {sec.section_type === "MATERIAL" ? (
-                    <button
-                      type="button"
-                      disabled={saving}
-                      onClick={() => openPickProduct(sec.id)}
-                      style={{
-                        fontSize: 12,
-                        padding: "8px 10px",
-                        borderRadius: 10,
-                        border: "1px solid #1D4ED8",
-                        background: "rgba(37,99,235,0.15)",
-                        color: "#BFDBFE",
-                        fontWeight: 900,
-                        cursor: "pointer",
-                        opacity: saving ? 0.6 : 1,
-                      }}
-                    >
-                      + 제품 추가
-                    </button>
+                    <>
+                      <button
+                        type="button"
+                        disabled={saving}
+                        onClick={() => openPickProduct(sec.id)}
+                        style={{
+                          fontSize: 12,
+                          padding: "8px 10px",
+                          borderRadius: 10,
+                          border: "1px solid #1D4ED8",
+                          background: "rgba(37,99,235,0.15)",
+                          color: "#BFDBFE",
+                          fontWeight: 900,
+                          cursor: "pointer",
+                          opacity: saving ? 0.6 : 1,
+                        }}
+                      >
+                        + 제품 추가
+                      </button>
+                      <button
+                        type="button"
+                        disabled={saving}
+                        onClick={() => addLine(sec.id)}
+                        style={{
+                          fontSize: 12,
+                          padding: "8px 10px",
+                          borderRadius: 10,
+                          border: "1px solid #334155",
+                          background: "rgba(15,23,42,0.35)",
+                          color: "#F8FAFC",
+                          fontWeight: 900,
+                          cursor: "pointer",
+                          opacity: saving ? 0.6 : 1,
+                        }}
+                      >
+                        + 라인 추가
+                      </button>
+                    </>
                   ) : (
                     <button
                       type="button"

@@ -375,8 +375,9 @@ export default function EstimatesPage() {
           </div>
         </div>
       ) : (
-        filtered.map((r) => {
+        filtered.map((r, idx) => {
           const parts = fmtParts(r.createdAt || r.updatedAt);
+          const isOddRow = idx % 2 === 1;
           return (
             <div
               key={r.id}
@@ -387,6 +388,7 @@ export default function EstimatesPage() {
                 gap: 0,
                 padding: "10px 12px",
                 borderTop: "1px solid rgba(148,163,184,0.15)",
+                background: isOddRow ? "rgba(148,163,184,0.08)" : "rgba(15,23,42,0.18)",
                 cursor: "pointer",
                 alignItems: "center",
               }}

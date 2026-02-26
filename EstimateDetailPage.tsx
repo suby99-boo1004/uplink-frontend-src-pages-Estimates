@@ -332,7 +332,7 @@ export default function EstimateDetailPage() {
                           }}
                         >
                           <span>
-                            구버전 #{p?.id ?? "-"}{" "}
+                            구버전 - {ymd((p as any)?.issue_date || (p as any)?.created_at || (p as any)?.createdAt || (p as any)?.updated_at || (p as any)?.updatedAt)}{" "}
                             <span
                               style={{
                                 marginLeft: 8,

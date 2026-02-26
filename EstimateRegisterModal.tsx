@@ -4,6 +4,38 @@ import { fetchDepartments, fetchProjects, type ProjectStatus } from "../../../ap
 import { http } from "../../../api/http";
 import { Product } from "../../../types/products";
 
+
+
+
+
+function _fmtComma(v: number | null | undefined) {
+  if (v === null || v === undefined) return "";
+  const n = Number(v);
+  if (!Number.isFinite(n)) return "";
+  return n.toLocaleString();
+}
+function _parseComma(input: string) {
+  const raw = String(input || "").replace(/,/g, "").trim();
+  if (!raw) return null;
+  const n = Number(raw);
+  return Number.isFinite(n) ? n : null;
+}
+
+
+function fmtComma(v: number | null | undefined) {
+  if (v === null || v === undefined) return "";
+  const n = Number(v);
+  if (!Number.isFinite(n)) return "";
+  return n.toLocaleString();
+}
+function parseComma(s: string) {
+  const raw = String(s || "").replace(/,/g, "").trim();
+  if (!raw) return null;
+  const n = Number(raw);
+  return Number.isFinite(n) ? n : null;
+}
+
+
 export type SectionType = "MATERIAL" | "LABOR" | "EXPENSE" | "OVERHEAD" | "PROFIT" | "MANUAL";
 export type CalcMode = "NORMAL" | "PERCENT_OF_SUBTOTAL" | "FORMULA";
 export type PriceType = "DESIGN" | "CONSUMER" | "SUPPLY" | "MANUAL";
@@ -224,8 +256,10 @@ function ProductPickModal({ open, onClose, onPick }: ProductPickModalProps) {
       <div
         onMouseDown={(e) => e.stopPropagation()}
         style={{
-          width: 980,
+          width: 650,
           maxWidth: "100%",
+          maxHeight: 520,
+          overflow: "hidden",
           background: "linear-gradient(180deg, #0B1220 0%, #050814 100%)",
           borderRadius: 16,
           padding: 16,
@@ -280,7 +314,7 @@ function ProductPickModal({ open, onClose, onPick }: ProductPickModalProps) {
             background: "rgba(2,6,23,0.35)",
           }}
         >
-          <div style={{ maxHeight: 420, overflow: "auto" }}>
+          <div style={{ maxHeight: 280, overflow: "auto" }}>
             {sortedRows.map((p) => {
               const isSelected = Number(selectedId) === Number(p.id);
               return (
@@ -315,7 +349,7 @@ function ProductPickModal({ open, onClose, onPick }: ProductPickModalProps) {
                   <div style={{ marginTop: 6, display: "flex", justifyContent: "space-between", gap: 10, fontSize: 11 }}>
                     <div style={{ color: "#CBD5E1" }}>{(p as any).category || (p as any).group || (p as any).kind || ""}</div>
                     <div style={{ color: "#A7F3D0" }}>
-                      납품가(참고): {getProductPrice(p as any, "SUPPLY") ? getProductPrice(p as any, "SUPPLY").toLocaleString() : "-"}
+                      <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 6, fontSize: 12, color: "#E2E8F0", fontWeight: 900 }}><span>설계가: {getProductPrice(p as any, "DESIGN") ? getProductPrice(p as any, "DESIGN").toLocaleString() : "-"}</span><span>소보수가: {getProductPrice(p as any, "CONSUMER") ? getProductPrice(p as any, "CONSUMER").toLocaleString() : "-"}</span><span>납품가: {getProductPrice(p as any, "SUPPLY") ? getProductPrice(p as any, "SUPPLY").toLocaleString() : "-"}</span></div>
                     </div>
                   </div>
                 </div>
@@ -503,6 +537,8 @@ export default function EstimateRegisterModal({ saving, onSubmit, mode = "create
   async function loadProjects() {
     setLoadingProjects(true);
     try {
+      const currentProjectId = Number(initial?.project_id ?? 0);
+
       const currentYear = new Date().getFullYear();
       const departments = await fetchDepartments({ year: currentYear });
       const ids = (departments || []).map((d: any) => Number(d?.id)).filter((n: number) => Number.isFinite(n) && n > 0);
@@ -515,7 +551,7 @@ export default function EstimateRegisterModal({ saving, onSubmit, mode = "create
 
       const results = await Promise.all(ids.map((id: number) => fetchProjects({ year: currentYear, department_id: id }).catch(() => [])));
       const merged: any[] = results.flat();
-      const filtered = merged.filter((p: any) => DISPLAY_STATUSES.includes(p?.status as any));
+      const filtered = merged.filter((p: any) => DISPLAY_STATUSES.includes(p?.status as any) || Number(p?.id) === currentProjectId);
       filtered.sort((a: any, b: any) => {
         const ta = a?.created_at ? new Date(a.created_at).getTime() : 0;
         const tb = b?.created_at ? new Date(b.created_at).getTime() : 0;
@@ -534,7 +570,7 @@ export default function EstimateRegisterModal({ saving, onSubmit, mode = "create
 
       // 1프로젝트=1견적: 이미 견적서가 생성된 프로젝트는 신규등록 '프로젝트 선택' 목록에서 제외
       // 단, 수정(mode=update)인 경우 현재 선택된 프로젝트는 유지
-      const currentProjectId = Number(initial?.project_id ?? project?.id ?? 0);
+      // currentProjectId is defined above (for update: keep current project in the list)
 
       try {
         const res = await http.get("/estimates");
@@ -1139,9 +1175,9 @@ export default function EstimateRegisterModal({ saving, onSubmit, mode = "create
                               <div style={{ color: "#94A3B8", fontSize: 12 }}>자동</div>
                             ) : (
                               <input
-                                value={String(Number(l.unit_price || 0))}
+                                value={_fmtComma(l.unit_price ?? 0)}
                                 disabled={saving}
-                                onChange={(e) => updateLine(sec.id, l.id, { unit_price: Number(e.target.value || 0) })}
+                                onChange={(e) => updateLine(sec.id, l.id, { unit_price: (_parseComma(e.target.value) ?? 0) })}
                                 style={{
                                   width: "100%",
                                   padding: "8px 10px",

@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import EstimateRegisterModal, { DraftEstimateCreatePayload } from "./Components/EstimateRegisterModal";
+import EstimateRegisterModal, { DraftEstimateCreatePayload } from "./components/EstimateRegisterModal";
 import { http } from "../../api/http";
 
 type LoadState =
@@ -11,11 +11,16 @@ type LoadState =
 
 function normalizeInitial(raw: any): DraftEstimateCreatePayload {
   const sections = Array.isArray(raw?.sections) ? raw.sections : [];
+
   return {
+    // 환경 차이 대응: project_id 위치가 달라도 잡히게
     project_id: Number(raw?.project_id || raw?.project?.id || 0),
+
+    // 제목/수신/메모 그대로
     title: raw?.title ?? null,
     receiver_name: raw?.receiver_name ?? null,
     memo: raw?.memo ?? null,
+
     sections: sections
       .map((s: any) => ({
         section_order: Number(s?.section_order ?? 0),
@@ -35,8 +40,7 @@ function normalizeInitial(raw: any): DraftEstimateCreatePayload {
           base_section_type: l?.base_section_type ?? null,
           formula: l?.formula ?? null,
           source_type: l?.source_type ?? "NONE",
-          source_id:
-            l?.source_id === null || l?.source_id === undefined ? null : Number(l.source_id),
+          source_id: l?.source_id === null || l?.source_id === undefined ? null : Number(l.source_id),
           price_type: l?.price_type ?? null,
         })),
       }))
@@ -58,7 +62,6 @@ function readChain(id: number): any[] {
     return [];
   }
 }
-
 function writeChain(id: number, chain: any[]) {
   try {
     sessionStorage.setItem(`estimate_prev_chain_${id}`, JSON.stringify(chain.slice(0, 10)));
@@ -69,10 +72,9 @@ function writeChain(id: number, chain: any[]) {
 
 export default function EstimateEditPage() {
   const params = useParams();
-  // ✅ 라우트 파라미터 이름이 환경에 따라 다를 수 있어(id / estimateId / estimate_id 모두 지원)
+  // 라우트 파라미터 이름이 환경에 따라 다를 수 있어(id / estimateId / estimate_id 모두 지원)
   const idParam =
     (params as any)?.id ?? (params as any)?.estimateId ?? (params as any)?.estimate_id ?? null;
-
   const estimateId = useMemo(() => Number(idParam || 0), [idParam]);
 
   const nav = useNavigate();
@@ -85,13 +87,14 @@ export default function EstimateEditPage() {
       setState({ status: "error", message: "견적서 ID가 올바르지 않습니다." });
       return;
     }
-
     let alive = true;
+
     (async () => {
       try {
         setState({ status: "loading" });
         const res = await http.get(`/estimates/${estimateId}`);
         const initial = normalizeInitial(res.data);
+
         if (!alive) return;
         setRawDetail(res.data);
         setState({ status: "ready", initial });
@@ -117,9 +120,10 @@ export default function EstimateEditPage() {
     try {
       const res = await http.put(`/estimates/${estimateId}`, payload);
       const body = res.data;
+
       const newId = Number(body?.estimate_id || body?.id || body?.estimateId || 0) || estimateId;
 
-      // ✅ 수정 전 견적서(구버전) 저장: 신규 id에 매핑해서 상세에서 바로 보이게
+      // 수정 전 견적서(구버전) 저장: 신규 id에 매핑해서 상세에서 바로 보이게
       const base = readChain(newId);
       const snapshot = rawDetail || { id: estimateId, ...payload };
       const merged = [snapshot, ...base].slice(0, 10);
@@ -136,12 +140,11 @@ export default function EstimateEditPage() {
   }
 
   return (
-    <div style={{ padding: 18 }}>
-      <div style={{ fontSize: 18, fontWeight: 900, color: "#F8FAFC", marginBottom: 10 }}>
+    <div style={{ padding: 16 }}>
+      <div style={{ fontSize: 18, fontWeight: 900, color: "#E2E8F0", marginBottom: 8 }}>
         견적서 수정
       </div>
-
-      <div style={{ color: "#94A3B8", fontSize: 12, marginBottom: 12 }}>ID: {estimateId}</div>
+      <div style={{ fontSize: 12, color: "#94A3B8", marginBottom: 12 }}>ID: {estimateId}</div>
 
       <button
         onClick={() => nav(`/estimates/${estimateId}`)}
@@ -160,18 +163,21 @@ export default function EstimateEditPage() {
       </button>
 
       {state.status === "loading" && (
-        <div style={{ color: "#E2E8F0", padding: 12 }}>불러오는 중...</div>
+        <div style={{ color: "#E2E8F0", padding: "8px 0" }}>불러오는 중...</div>
       )}
 
       {state.status === "error" && (
-        <div style={{ color: "#FCA5A5", padding: 12, fontWeight: 900 }}>{state.message}</div>
+        <div style={{ color: "#FCA5A5", padding: "8px 0" }}>{state.message}</div>
       )}
 
       {state.status === "ready" && (
         <EstimateRegisterModal
-          mode="edit"
-          initial={state.initial}
+          // ✅ initial.project_id가 로드된 시점에 확실히 기본 선택이 되도록 리마운트
+          key={`edit-${estimateId}-${state.initial.project_id}`}
           saving={saving}
+          mode="update"
+          initial={state.initial}
+          submitLabel="수정 저장"
           onSubmit={handleSubmit}
         />
       )}

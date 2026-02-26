@@ -31,6 +31,24 @@ function statusLabel(s: EstimateStatus) {
   return "사업취소";
 }
 
+function statusBtnStyle(active: boolean): React.CSSProperties {
+  return {
+	width: 110,
+    fontSize: 15,
+    padding: "10px 12px",
+    borderRadius: 10,
+    border: active ? "1px solid #1D4ED8" : "1px solid #334155",
+    background: active
+      ? "linear-gradient(180deg, #2563EB 0%, #1D4ED8 100%)"
+      : "rgba(15,23,42,0.35)",
+    color: active ? "#F8FAFC" : "#CBD5E1",
+    fontWeight: 900,
+    cursor: "pointer",
+    outline: "none",
+    transition: "filter 120ms ease, transform 120ms ease",
+  };
+}
+
 function fmtParts(iso?: string) {
   if (!iso) return { date: "", time: "" };
   // iso could be 'YYYY-MM-DDTHH:MM:SS...' or 'YYYY-MM-DD HH:MM:SS...+09:00'
@@ -218,9 +236,9 @@ export default function EstimatesPage() {
     : "120px 1fr 220px 160px 160px";
 
   return (
-    <div style={{ padding: 18 }}>
-      <div style={{ fontSize: 18, fontWeight: 900, color: "#F8FAFC", marginBottom: 14 }}>견적서</div>
-
+    <div style={{ padding: 10 }}>
+	<h2 style={{ marginBottom: 12 }}>견적서</h2>
+      
       <div
         style={{
           display: "flex",
@@ -234,34 +252,41 @@ export default function EstimatesPage() {
         <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
           <div style={{ color: "#CBD5E1", fontWeight: 800 }}>견적서 리스트</div>
 
-          <select
-            value={status}
-            onChange={(e) => setStatus(e.target.value as EstimateStatus)}
-            style={{
-              fontSize: 12,
-              padding: "8px 10px",
-              borderRadius: 10,
-              border: "1px solid #334155",
-              background: "rgba(15,23,42,0.35)",
-              color: "#F8FAFC",
-              outline: "none",
-              cursor: "pointer",
-            }}
-          >
-            {(["ongoing", "done", "canceled"] as EstimateStatus[]).map((s) => (
-              <option key={s} value={s}>
-                {statusLabel(s)}
-              </option>
-            ))}
-          </select>
+          {/* 상태 탭 버튼(현재진행중/사업완료/사업취소) */}
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            {(["ongoing", "done", "canceled"] as EstimateStatus[]).map((s) => {
+              const active = status === s;
+              return (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => setStatus(s)}
+                  aria-pressed={active}
+                  style={statusBtnStyle(active)}
+                  onMouseDown={(e) => {
+                    // 클릭 시 텍스트 선택 방지 + 미세한 눌림 효과
+                    e.preventDefault();
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.filter = "brightness(1.06)";
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.filter = "";
+                  }}
+                >
+                  {statusLabel(s)}
+                </button>
+              );
+            })}
+          </div>
 
           {status !== "ongoing" && (
             <select
               value={year}
               onChange={(e) => setYear(e.target.value ? Number(e.target.value) : "")}
               style={{
-                fontSize: 12,
-                padding: "8px 10px",
+                fontSize: 15,
+                padding: "10px 12px",
                 borderRadius: 10,
                 border: "1px solid #334155",
                 background: "rgba(15,23,42,0.35)",
@@ -269,8 +294,11 @@ export default function EstimatesPage() {
                 outline: "none",
                 cursor: "pointer",
                 minWidth: 110,
+				fontWeight: 500,
               }}
             >
+			
+	
               {availableYears.map((y) => (
                 <option key={y} value={y}>
                   {y}년
@@ -299,9 +327,7 @@ export default function EstimatesPage() {
           <button
             onClick={() => navigate("/estimates/new")}
             style={{
-				width: 130,
-              height: 40,
-              fontSize: 16,
+			  
               padding: "10px 12px",
               borderRadius: 12,
 			  fontWeight: 900,
@@ -328,17 +354,17 @@ export default function EstimatesPage() {
           padding: "10px 12px",
           borderRadius: 12,
           border: "1px solid rgba(148,163,184,0.18)",
-          background: "rgba(15,23,42,0.35)",
-          color: "#E2E8F0",
+          background: "#8ec7fa",
+          color: "#000000",
           fontWeight: 900,
         }}
       >
-        <div>날짜</div>
-        <div>건명</div>
-        <div>수신(발주처)</div>
-        <div>견적 담당자</div>
-        <div style={{ textAlign: "right" }}>합계(원)</div>
-        {isAdmin && <div style={{ textAlign: "center" }}>삭제</div>}
+        <div>등록일</div>
+        <div>사업명</div>
+        <div>수 신(발주처)</div>
+        <div>견적 작성자</div>
+        <div style={{ textAlign: "right" }}>합 계(원)</div>
+        {isAdmin && <div style={{ textAlign: "center" }}>삭 제</div>}
       </div>
 
       {filtered.length === 0 ? (

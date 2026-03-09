@@ -281,16 +281,16 @@ export default function EstimateDetailPage() {
         ) : (
           <div ref={printRef} className="estimate-print">
             {/* ✅ PDF/출력에도 포함되는 문서 타이틀 */}
-            <div style={{ textAlign: "center", fontSize: 35, fontWeight: 900, letterSpacing: 2, marginTop: 4, marginBottom: 10 }}>견  적  서</div>
+            <div style={{ textAlign: "center", fontSize: 40, fontWeight: 1000, letterSpacing: 2, marginTop: 4, marginBottom: 8 }}>견  적  서</div>
             <div className="print-header-row" style={{ display: "flex", gap: 24, alignItems: "flex-start", justifyContent: "space-between" }}>
               <div className="print-header-left" style={{ flex: "0 0 58%", maxWidth: "58%" }}>
                 {/* ✅ 문서 헤더: 견적서 명 */}
-            <div style={{ marginTop: 14, marginBottom: 10, fontSize: 15 }}>
+            <div style={{ marginTop: 14, marginBottom: 8, fontSize: 15 }}>
               <span style={{ fontWeight: 900 }}>🧾 견적서 명 :</span>{" "}<span style={{ fontWeight: 700 }}>{data.project_name || "-"}</span>
             </div>
 
             {/* ✅ 수신/작성자/작성일 + 합계/부가세/총계: 표 형식 */}
-            <div style={{ border: "1px solid #D1D5DB", borderRadius: 8, overflow: "hidden", marginBottom: 16 }}>
+            <div style={{ border: "1px solid #D1D5DB", borderRadius: 8, overflow: "hidden", marginBottom: 8 }}>
             <table className="print-info-table" style={{ width: "100%", borderCollapse: "collapse" }}>
               <tbody>
                 <tr>
@@ -317,7 +317,7 @@ export default function EstimateDetailPage() {
             </table>
             </div>
 
-            <div style={{ marginTop: -8, marginBottom: 14, fontSize: 12, fontWeight: 700 }}>
+            <div style={{ marginTop: -8, marginBottom: 8, fontSize: 12, fontWeight: 700 }}>
               * 견적 유효 기간 : 30일
             </div>
               </div>
@@ -328,24 +328,24 @@ export default function EstimateDetailPage() {
             </div>
 
             {sections.length === 0 ? (
-              <div style={{ color: "#CBD5E1", padding: 12 }}>섹션/항목이 없습니다.</div>
+              <div style={{ color: "#CBD5E1" }}>섹션/항목이 없습니다.</div>
             ) : (
               sections.map((sec: any, idx: number) => (
-                <div className="print-avoid-break" key={`${sec.section_type}-${sec.section_order}-${idx}`} style={{ marginBottom: 16 }}>
-                  <div style={{ fontWeight: 900, marginBottom: 8 }}>
+                <div key={`${sec.section_type}-${sec.section_order}-${idx}`} style={{ marginBottom: 1 }}>
+                  <div style={{ fontWeight: 500, marginBottom: 1 }}>
                     {idx + 1}. {sectionLabel(sec.section_type)}
                   </div>
 
                   <table style={{ width: "100%", borderCollapse: "collapse" }}>
                     <thead>
                       <tr style={{ background: "rgba(148,163,184,0.12)" }}>
-                        <th style={{ textAlign: "left", padding: 8, fontSize: 12, color: "#E2E8F0" }}>번호</th>
-                        <th style={{ textAlign: "left", padding: 8, fontSize: 12, color: "#E2E8F0" }}>항목</th>
-                        <th style={{ textAlign: "left", padding: 8, fontSize: 12, color: "#E2E8F0" }}>규격</th>
-                        <th style={{ textAlign: "left", padding: 8, fontSize: 12, color: "#E2E8F0" }}>단위</th>
-                        <th style={{ textAlign: "right", padding: 8, fontSize: 12, color: "#E2E8F0" }}>수량</th>
-                        <th style={{ textAlign: "right", padding: 8, fontSize: 12, color: "#E2E8F0" }}>단가</th>
-                        <th style={{ textAlign: "right", padding: 8, fontSize: 12, color: "#E2E8F0" }}>금액</th>
+                        <th style={{ textAlign: "left", padding: 4, fontSize: 12, color: "#E2E8F0" }}>번호</th>
+                        <th style={{ textAlign: "left", padding: 4, fontSize: 12, color: "#E2E8F0" }}>항목</th>
+                        <th style={{ textAlign: "left", padding: 4, fontSize: 12, color: "#E2E8F0" }}>규격</th>
+                        <th style={{ textAlign: "left", padding: 4, fontSize: 12, color: "#E2E8F0" }}>단위</th>
+                        <th style={{ textAlign: "right", padding: 4, fontSize: 12, color: "#E2E8F0" }}>수량</th>
+                        <th style={{ textAlign: "right", padding: 4, fontSize: 12, color: "#E2E8F0" }}>단가</th>
+                        <th style={{ textAlign: "right", padding: 4, fontSize: 12, color: "#E2E8F0" }}>금액</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -354,24 +354,24 @@ export default function EstimateDetailPage() {
                         .sort((a: any, b: any) => (a.line_order ?? 0) - (b.line_order ?? 0))
                         .map((ln: any, i: number) => (
                           <tr key={`${ln.id ?? i}`} style={{ borderBottom: "1px solid #1F2937" }}>
-                            <td style={{ padding: 8, fontSize: 12, color: "#CBD5E1" }}>{ln.line_order ?? i + 1}</td>
-                            <td style={{ padding: 8, fontSize: 12, color: "#F8FAFC" }}>{ln.name}</td>
-                            <td style={{ padding: 8, fontSize: 12, color: "#CBD5E1" }}>{ln.spec || ""}</td>
-                            <td style={{ padding: 8, fontSize: 12, color: "#CBD5E1" }}>{ln.unit || ""}</td>
-                            <td style={{ padding: 8, fontSize: 12, color: "#CBD5E1", textAlign: "right" }}>{ln.qty ?? ""}</td>
-                            <td style={{ padding: 8, fontSize: 12, color: "#CBD5E1", textAlign: "right" }}>
+                            <td style={{ padding: 4, fontSize: 12, color: "#CBD5E1" }}>{ln.line_order ?? i + 1}</td>
+                            <td style={{ padding: 4, fontSize: 12, color: "#F8FAFC" }}>{ln.name}</td>
+                            <td style={{ padding: 4, fontSize: 12, color: "#CBD5E1" }}>{ln.spec || ""}</td>
+                            <td style={{ padding: 4, fontSize: 12, color: "#CBD5E1" }}>{ln.unit || ""}</td>
+                            <td style={{ padding: 4, fontSize: 12, color: "#CBD5E1", textAlign: "right" }}>{ln.qty ?? ""}</td>
+                            <td style={{ padding: 4, fontSize: 12, color: "#CBD5E1", textAlign: "right" }}>
                               {ln.unit_price != null ? money(ln.unit_price) : ""}
                             </td>
-                            <td style={{ padding: 8, fontSize: 12, color: "#F8FAFC", textAlign: "right" }}>
+                            <td style={{ padding: 4, fontSize: 12, color: "#F8FAFC", textAlign: "right" }}>
                               {money(ln.amount)}
                             </td>
                           </tr>
                         ))}
                       <tr>
-                        <td colSpan={6} style={{ padding: 8, fontSize: 12, color: "#CBD5E1", textAlign: "right" }}>
+                        <td colSpan={6} style={{ padding: 4, fontSize: 12, color: "#CBD5E1", textAlign: "right" }}>
                           소계
                         </td>
-                        <td style={{ padding: 8, fontSize: 12, color: "#F8FAFC", textAlign: "right", fontWeight: 900 }}>
+                        <td style={{ padding: 4, fontSize: 12, color: "#F8FAFC", textAlign: "right", fontWeight: 900 }}>
                           {money(sec.subtotal ?? 0)}
                         </td>
                       </tr>
@@ -381,7 +381,7 @@ export default function EstimateDetailPage() {
               ))
             )}
 			
-			<div className="print-memo-title" style={{ fontSize: 12, fontWeight: 900, marginBottom: 6 }}>비고 내용</div>
+			<div className="print-memo-title" style={{ fontSize: 12, fontWeight: 900, marginBottom: 4 }}>비고 내용</div>
 			
 			{/* ✅ 비고(헤더 메모) – 저장 후 하단 표시 */}
             {((data as any)?.memo ?? "").trim() ? (
@@ -474,8 +474,8 @@ export default function EstimateDetailPage() {
                           </span>
                         </summary>
 
-                        <div style={{ padding: 12, background: "rgba(15,23,42,0.25)" }}>
-                          <div style={{ fontSize: 12, color: "#CBD5E1", display: "flex", flexWrap: "wrap", gap: 12, marginBottom: 10 }}>
+                        <div style={{ padding: 4, background: "rgba(15,23,42,0.25)" }}>
+                          <div style={{ fontSize: 12, color: "#CBD5E1", display: "flex", flexWrap: "wrap", gap: 12, marginBottom: 8 }}>
                             <div>프로젝트: {p?.project_name || "-"}</div>
                             <div>수신: {p?.receiver_name || "-"}</div>
                             <div>작성자: {p?.author_name || "-"}</div>
@@ -493,7 +493,7 @@ export default function EstimateDetailPage() {
                                   <div key={`${sec.section_type}-${sec.section_order}-${sidx}`}>
                                     <div style={{ fontWeight: 900, marginBottom: 6, color: "#F8FAFC" }}>
                                       {sidx + 1}. {sectionLabel(sec.section_type)}
-                                      <span style={{ marginLeft: 8, fontSize: 12, color: "#CBD5E1" }}>
+                                      <span style={{ marginLeft: 8, fontSize: 8, color: "#CBD5E1" }}>
                                         (소계 {money(sec?.subtotal)}원)
                                       </span>
                                     </div>
@@ -501,13 +501,13 @@ export default function EstimateDetailPage() {
                                     <table style={{ width: "100%", borderCollapse: "collapse" }}>
                                       <thead>
                                         <tr style={{ background: "rgba(148,163,184,0.10)" }}>
-                                          <th style={{ textAlign: "left", padding: 8, fontSize: 12, color: "#E2E8F0" }}>번호</th>
-                                          <th style={{ textAlign: "left", padding: 8, fontSize: 12, color: "#E2E8F0" }}>항목</th>
-                                          <th style={{ textAlign: "left", padding: 8, fontSize: 12, color: "#E2E8F0" }}>규격</th>
-                                          <th style={{ textAlign: "left", padding: 8, fontSize: 12, color: "#E2E8F0" }}>단위</th>
-                                          <th style={{ textAlign: "right", padding: 8, fontSize: 12, color: "#E2E8F0" }}>수량</th>
-                                          <th style={{ textAlign: "right", padding: 8, fontSize: 12, color: "#E2E8F0" }}>단가</th>
-                                          <th style={{ textAlign: "right", padding: 8, fontSize: 12, color: "#E2E8F0" }}>금액</th>
+                                          <th style={{ textAlign: "left", padding: 4, fontSize: 8, color: "#E2E8F0" }}>번호</th>
+                                          <th style={{ textAlign: "left", padding: 4, fontSize: 8, color: "#E2E8F0" }}>항목</th>
+                                          <th style={{ textAlign: "left", padding: 4, fontSize: 8, color: "#E2E8F0" }}>규격</th>
+                                          <th style={{ textAlign: "left", padding: 4, fontSize: 8, color: "#E2E8F0" }}>단위</th>
+                                          <th style={{ textAlign: "right", padding: 4, fontSize: 8, color: "#E2E8F0" }}>수량</th>
+                                          <th style={{ textAlign: "right", padding: 4, fontSize: 8, color: "#E2E8F0" }}>단가</th>
+                                          <th style={{ textAlign: "right", padding: 4, fontSize: 8, color: "#E2E8F0" }}>금액</th>
                                         </tr>
                                       </thead>
                                       <tbody>
@@ -515,15 +515,15 @@ export default function EstimateDetailPage() {
                                           .sort((a: any, b: any) => (a.line_order ?? 0) - (b.line_order ?? 0))
                                           .map((ln: any, i: number) => (
                                             <tr key={`${ln.id ?? i}`} style={{ borderBottom: "1px solid #1F2937" }}>
-                                              <td style={{ padding: 8, fontSize: 12, color: "#CBD5E1" }}>{ln.line_order ?? i + 1}</td>
-                                              <td style={{ padding: 8, fontSize: 12, color: "#F8FAFC" }}>{ln.name}</td>
-                                              <td style={{ padding: 8, fontSize: 12, color: "#CBD5E1" }}>{ln.spec || ""}</td>
-                                              <td style={{ padding: 8, fontSize: 12, color: "#CBD5E1" }}>{ln.unit || ""}</td>
-                                              <td style={{ padding: 8, fontSize: 12, color: "#CBD5E1", textAlign: "right" }}>{ln.qty ?? ""}</td>
-                                              <td style={{ padding: 8, fontSize: 12, color: "#CBD5E1", textAlign: "right" }}>
+                                              <td style={{ padding: 4, fontSize: 8, color: "#CBD5E1" }}>{ln.line_order ?? i + 1}</td>
+                                              <td style={{ padding: 4, fontSize: 8, color: "#F8FAFC" }}>{ln.name}</td>
+                                              <td style={{ padding: 4, fontSize: 8, color: "#CBD5E1" }}>{ln.spec || ""}</td>
+                                              <td style={{ padding: 4, fontSize: 8, color: "#CBD5E1" }}>{ln.unit || ""}</td>
+                                              <td style={{ padding: 4, fontSize: 8, color: "#CBD5E1", textAlign: "right" }}>{ln.qty ?? ""}</td>
+                                              <td style={{ padding: 4, fontSize: 8, color: "#CBD5E1", textAlign: "right" }}>
                                                 {ln.unit_price != null ? money(ln.unit_price) : ""}
                                               </td>
-                                              <td style={{ padding: 8, fontSize: 12, color: "#F8FAFC", textAlign: "right" }}>
+                                              <td style={{ padding: 4, fontSize: 8, color: "#F8FAFC", textAlign: "right" }}>
                                                 {money(ln.amount)}
                                               </td>
                                             </tr>

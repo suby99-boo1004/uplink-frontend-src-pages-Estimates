@@ -290,38 +290,40 @@ export default function EstimateDetailPage() {
             </div>
 
             {/* ✅ 수신/작성자/작성일 + 합계/부가세/총계: 표 형식 */}
-            <table className="print-info-table" style={{ width: "100%", borderCollapse: "collapse", marginBottom: 16, border: "1px solid #D1D5DB" }}>
+            <div style={{ border: "1px solid #D1D5DB", borderRadius: 8, overflow: "hidden", marginBottom: 16 }}>
+            <table className="print-info-table" style={{ width: "100%", borderCollapse: "collapse" }}>
               <tbody>
                 <tr>
-                  <th style={{ border: "1px solid #D1D5DB", background: "#F3F4F6", padding: "10px 12px", fontSize: 12, color: "#111827" }}>수신</th>
-                  <td >{data.receiver_name || "-"}</td>
-                  <th style={{ border: "1px solid #D1D5DB", background: "#F3F4F6", padding: "10px 12px", fontSize: 12, color: "#111827" }}>작성자</th>
-                  <td >{data.author_name || "-"}</td>
+                  <th style={{ border: "1px solid #D1D5DB", background: "#F3F4F6", padding: "10px 12px",  fontSize: 12, color: "#111827", fontWeight: 900, textAlign: "center", whiteSpace: "nowrap" }}>수 신</th>
+                  <td style={{ border: "1px solid #D1D5DB", padding: "10px 12px", fontSize: 12 }}>{data.receiver_name || "-"}</td>
+                  <th style={{ border: "1px solid #D1D5DB", background: "#F3F4F6", padding: "10px 12px", fontSize: 12, color: "#111827", fontWeight: 900, textAlign: "center", whiteSpace: "nowrap" }}>작성자</th>
+                  <td style={{ border: "1px solid #D1D5DB", padding: "10px 12px", fontSize: 12 }}>{data.author_name || "-"}</td>
                 </tr>
                 <tr>
-                  <th style={{ border: "1px solid #D1D5DB", background: "#F3F4F6", padding: "10px 12px", fontSize: 12, color: "#111827" }}>작성일</th>
-                  <td colSpan={3} style={{ border: "1px solid #D1D5DB" }}>{ymdOnly((data as any).issue_date || (data as any).created_at || (data as any).createdAt || (data as any).updated_at || (data as any).updatedAt)}</td>
+                  <th style={{ border: "1px solid #D1D5DB", background: "#F3F4F6", padding: "10px 12px", fontSize: 12, color: "#111827", fontWeight: 900, textAlign: "center", whiteSpace: "nowrap" }}>작 성 일</th>
+                  <td colSpan={3} style={{ border: "1px solid #D1D5DB", padding: "10px 12px", fontSize: 12 }}>{ymdOnly((data as any).issue_date || (data as any).created_at || (data as any).createdAt || (data as any).updated_at || (data as any).updatedAt)}</td>
                 </tr>
                 <tr>
-                  <th style={{ border: "1px solid #D1D5DB", background: "#F3F4F6", padding: "10px 12px", fontSize: 12, color: "#111827" }}>합계</th>
-                  <td>{money(data.subtotal)}원</td>
-                  <th style={{ border: "1px solid #D1D5DB", background: "#F3F4F6", padding: "10px 12px", fontSize: 12, color: "#111827" }}>부가세</th>
-                  <td>{money(data.tax)}원</td>
+                  <th style={{ border: "1px solid #D1D5DB", background: "#F3F4F6", padding: "10px 12px", fontSize: 12, color: "#111827", fontWeight: 900, textAlign: "center", whiteSpace: "nowrap" }}>합 계</th>
+                  <td style={{ border: "1px solid #D1D5DB", padding: "10px 12px", fontSize: 12 }}>{money(data.subtotal)}원</td>
+                  <th style={{ border: "1px solid #D1D5DB", background: "#F3F4F6", padding: "10px 12px", fontSize: 12, color: "#111827", fontWeight: 900, textAlign: "center", whiteSpace: "nowrap" }}>부 가 세</th>
+                  <td style={{ border: "1px solid #D1D5DB", padding: "10px 12px", fontSize: 12 }}>{money(data.tax)}원</td>
                 </tr>
                 <tr>
-                  <th style={{ border: "1px solid #D1D5DB", background: "#F3F4F6", padding: "10px 12px", fontSize: 12, color: "#111827" }}>총계</th>
-                  <td colSpan={3} style={{ border: "1px solid #D1D5DB" }}>{money(data.total)}원</td>
+                  <th style={{ border: "1px solid #D1D5DB", background: "#F3F4F6", padding: "10px 12px", fontSize: 12, color: "#111827", fontWeight: 900, textAlign: "center", whiteSpace: "nowrap" }}>총 계</th>
+                  <td colSpan={3} style={{ border: "1px solid #D1D5DB", padding: "10px 12px", fontSize: 12 }}>{money(data.total)}원</td>
                 </tr>
               </tbody>
             </table>
+            </div>
 
-            <div style={{ marginTop: -8, marginBottom: 14, fontSize: 12, color: "#111827", fontWeight: 700 }}>
+            <div style={{ marginTop: -8, marginBottom: 14, fontSize: 12, fontWeight: 700 }}>
               * 견적 유효 기간 : 30일
             </div>
               </div>
               {/* ✅ 회사 정보 이미지(프린트 전용) - 표 오른쪽 */}
-              <div className="print-only print-header-right" style={{ flex: "0 0 40%", maxWidth: "38%", display: "flex", justifyContent: "flex-end", paddingRight: 12, boxSizing: "border-box", overflow: "visible" }}>
-                <img src={companyInfoImg} alt="회사 정보" style={{ maxWidth: "95%", height: "auto", objectFit: "contain" }} />
+              <div className="print-only print-header-right" style={{ flex: "0 0 40%", maxWidth: "45%", display: "flex", justifyContent: "flex-end", paddingRight: 24, paddingLeft: 8, boxSizing: "border-box", overflow: "visible" }}>
+                <img src={companyInfoImg} alt="회사 정보" style={{ maxWidth: "100%", height: "auto", objectFit: "contain", display: "block" }} />
               </div>
             </div>
 

@@ -419,10 +419,10 @@ function compute(sections: DraftSection[]) {
       if (line.calc_mode !== "NORMAL") continue;
       const qty = Number(line.qty || 0);
       const up = Number(line.unit_price || 0);
-      line.amount = Math.floor(qty * up);
+      line.amount = Math.round(qty * up);
     }
     const sub = sec.lines.reduce((a, b) => a + Number(b.amount || 0), 0);
-    subtotalByType[sec.section_type] = Math.floor(sub);
+    subtotalByType[sec.section_type] = Math.round(sub);
   }
 
   // PERCENT_OF_SUBTOTAL
@@ -432,9 +432,9 @@ function compute(sections: DraftSection[]) {
       const base = line.base_section_type ? subtotalByType[line.base_section_type] : 0;
       const pct = Number(line.qty || 0) / 100.0;
       line.unit_price = null;
-      line.amount = Math.floor(base * pct);
+      line.amount = Math.round(base * pct);
     }
-    subtotalByType[sec.section_type] = Math.floor(sec.lines.reduce((a, b) => a + Number(b.amount || 0), 0));
+    subtotalByType[sec.section_type] = Math.round(sec.lines.reduce((a, b) => a + Number(b.amount || 0), 0));
   }
 
   // FORMULA (샘플 2종만 지원: (MATERIAL+LABOR)*0.06 / (LABOR+EXPENSE+OVERHEAD)*0.15)
@@ -455,13 +455,13 @@ function compute(sections: DraftSection[]) {
         val = base * (Number(line.qty || 0) / 100.0);
       }
       line.unit_price = null;
-      line.amount = Math.floor(val);
+      line.amount = Math.round(val);
     }
-    subtotalByType[sec.section_type] = Math.floor(sec.lines.reduce((a, b) => a + Number(b.amount || 0), 0));
+    subtotalByType[sec.section_type] = Math.round(sec.lines.reduce((a, b) => a + Number(b.amount || 0), 0));
   }
 
   const subtotal = Object.values(subtotalByType).reduce((a, b) => a + b, 0);
-  const tax = Math.floor(subtotal * 0.1);
+  const tax = Math.round(subtotal * 0.1);
   const total = subtotal + tax;
 
   return { sections: clone, subtotalByType, subtotal, tax, total };
@@ -699,17 +699,7 @@ export default function EstimateRegisterModal({ saving, onSubmit, mode = "create
     setSections((prev) => prev.filter((s) => s.id !== id).map((x, i) => ({ ...x, section_order: i + 1 })));
   }
 
-  
-  function updateSectionTitle(sectionId: string, title: string) {
-    setSections((prev) =>
-      prev.map((s) => {
-        if (s.id !== sectionId) return s;
-        return { ...s, title };
-      })
-    );
-  }
-
-function addLine(sectionId: string, preset?: Partial<DraftLine>) {
+  function addLine(sectionId: string, preset?: Partial<DraftLine>) {
     setSections((prev) =>
       prev.map((s) => {
         if (s.id !== sectionId) return s;
@@ -987,31 +977,8 @@ function addLine(sectionId: string, preset?: Partial<DraftLine>) {
           computed.sections.map((sec) => (
             <div key={sec.id} style={{ marginBottom: 14, border: "1px solid rgba(148,163,184,0.15)", borderRadius: 14, overflow: "hidden" }}>
               <div style={{ padding: 10, display: "flex", alignItems: "center", gap: 10, background: "rgba(15,23,42,0.55)" }}>
-                <div style={{ fontWeight: 900, display: "flex", alignItems: "center", gap: 8 }}>
-                  <span>{sec.section_order}.</span>
-                  {sec.section_type === "MANUAL" ? (
-                    <input
-                      value={sec.title}
-                      onChange={(e) => updateSectionTitle(sec.id, e.target.value)}
-                      onBlur={() => {
-                        const v = String(sec.title || "").trim();
-                        if (!v) updateSectionTitle(sec.id, "수동");
-                      }}
-                      placeholder="수동(수정 가능)"
-                      style={{
-                        padding: "6px 10px",
-                        borderRadius: 10,
-                        border: "1px solid #334155",
-                        background: "rgba(15,23,42,0.35)",
-                        color: "#F8FAFC",
-                        outline: "none",
-                        fontWeight: 900,
-                        width: 220,
-                      }}
-                    />
-                  ) : (
-                    <span>{sec.title}</span>
-                  )}
+                <div style={{ fontWeight: 900 }}>
+                  {sec.section_order}. {sec.title}
                 </div>
                 <div style={{ marginLeft: "auto", display: "flex", gap: 8, alignItems: "center" }}>
                   <div style={{ fontSize: 12, color: "#94A3B8" }}>
